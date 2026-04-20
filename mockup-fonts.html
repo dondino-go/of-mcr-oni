@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OF MCR-oni — Font Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Abril+Fatface&family=Rye&family=Boogaloo&family=Playfair+Display:wght@900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1008;
+    font-family: 'Barlow', sans-serif;
+    padding: 40px 24px;
+  }
+
+  h1 {
+    color: #F5E6C8;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+  }
+
+  .option {
+    width: 340px;
+    background: #F5E6C8;
+    border: 5px solid #111;
+    box-shadow: 6px 6px 0 #111;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .option-label {
+    background: #111;
+    color: #F5E6C8;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    opacity: 0.7;
+  }
+
+  .option-body {
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Banner shared style */
+  .banner {
+    background: #2D0A0A;
+    border: 4px solid #111;
+    box-shadow: 4px 4px 0 #111;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .subtitle {
+    font-size: 10px;
+    color: #F5E6C8;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    opacity: 0.7;
+  }
+
+  /* Section label — shared */
+  .sect {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #2D0A0A;
+    opacity: 0.5;
+    margin-bottom: -8px;
+  }
+
+  /* Cocktail cards — shared */
+  .cards {
+    display: flex;
+    gap: 10px;
+  }
+  .card {
+    flex: 1;
+    border: 3px solid #111;
+    box-shadow: 3px 3px 0 #111;
+    padding: 14px 10px;
+    background: #fff8ee;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .card.sel {
+    background: #2D0A0A;
+    border-color: #C0392B;
+    box-shadow: 3px 3px 0 #C0392B;
+  }
+  .card-icon { font-size: 30px; }
+  .card-desc {
+    font-size: 10px;
+    color: #888;
+    line-height: 1.4;
+  }
+  .card.sel .card-desc { color: #F5E6C8; opacity: 0.6; }
+
+  /* Button — shared */
+  .btn {
+    background: #C0392B;
+    border: 4px solid #111;
+    box-shadow: 4px 4px 0 #111;
+    padding: 14px;
+    text-align: center;
+  }
+  .btn-sub {
+    font-size: 10px;
+    color: #F5E6C8;
+    letter-spacing: 2px;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  /* ── FONT-SPECIFIC ── */
+
+  /* 1. Bebas Neue — punchy, Cuphead poster */
+  .f-bebas .app-title { font-family: 'Bebas Neue'; font-size: 48px; color: #F5C842; letter-spacing: 6px; text-shadow: 3px 3px 0 #111; }
+  .f-bebas .card-name { font-family: 'Bebas Neue'; font-size: 18px; color: #2D0A0A; letter-spacing: 2px; }
+  .f-bebas .card.sel .card-name { color: #F5C842; }
+  .f-bebas .btn-text { font-family: 'Bebas Neue'; font-size: 26px; letter-spacing: 5px; color: #F5E6C8; text-shadow: 2px 2px 0 #7a1c10; }
+
+  /* 2. Abril Fatface — art deco, editorial */
+  .f-abril .app-title { font-family: 'Abril Fatface'; font-size: 38px; color: #F5C842; letter-spacing: 2px; text-shadow: 3px 3px 0 #111; }
+  .f-abril .card-name { font-family: 'Abril Fatface'; font-size: 15px; color: #2D0A0A; }
+  .f-abril .card.sel .card-name { color: #F5C842; }
+  .f-abril .btn-text { font-family: 'Abril Fatface'; font-size: 20px; letter-spacing: 2px; color: #F5E6C8; text-shadow: 2px 2px 0 #7a1c10; }
+
+  /* 3. Rye — western tattoo parlour */
+  .f-rye .app-title { font-family: 'Rye'; font-size: 34px; color: #F5C842; letter-spacing: 2px; text-shadow: 3px 3px 0 #111; }
+  .f-rye .card-name { font-family: 'Rye'; font-size: 13px; color: #2D0A0A; }
+  .f-rye .card.sel .card-name { color: #F5C842; }
+  .f-rye .btn-text { font-family: 'Rye'; font-size: 17px; letter-spacing: 2px; color: #F5E6C8; text-shadow: 2px 2px 0 #7a1c10; }
+
+  /* 4. Boogaloo — 1930s cartoon, most Cuphead */
+  .f-boogaloo .app-title { font-family: 'Boogaloo'; font-size: 52px; color: #F5C842; letter-spacing: 3px; text-shadow: 3px 3px 0 #111; }
+  .f-boogaloo .card-name { font-family: 'Boogaloo'; font-size: 20px; color: #2D0A0A; }
+  .f-boogaloo .card.sel .card-name { color: #F5C842; }
+  .f-boogaloo .btn-text { font-family: 'Boogaloo'; font-size: 28px; letter-spacing: 3px; color: #F5E6C8; text-shadow: 2px 2px 0 #7a1c10; }
+
+  /* 5. Playfair Display Black — premium cocktail bar, serif edge */
+  .f-playfair .app-title { font-family: 'Playfair Display'; font-weight: 900; font-size: 36px; color: #F5C842; letter-spacing: 2px; text-shadow: 3px 3px 0 #111; font-style: italic; }
+  .f-playfair .card-name { font-family: 'Playfair Display'; font-weight: 900; font-size: 14px; color: #2D0A0A; }
+  .f-playfair .card.sel .card-name { color: #F5C842; }
+  .f-playfair .btn-text { font-family: 'Playfair Display'; font-weight: 900; font-size: 20px; letter-spacing: 2px; color: #F5E6C8; font-style: italic; text-shadow: 2px 2px 0 #7a1c10; }
+</style>
+</head>
+<body>
+
+<h1>Font options — same layout, different personality</h1>
+
+<div class="grid">
+
+  <!-- 1. Bebas Neue -->
+  <div class="option f-bebas">
+    <div class="option-label">1 · Bebas Neue — punchy poster</div>
+    <div class="option-body">
+      <div class="banner">
+        <div class="app-title">MCR-ONI</div>
+        <div class="subtitle">find your poison · manchester</div>
+      </div>
+      <p class="sect">What are you having?</p>
+      <div class="cards">
+        <div class="card sel">
+          <div class="card-icon">🍊</div>
+          <div class="card-name">NEGRONI</div>
+          <div class="card-desc">Gin · Campari<br>Sweet Vermouth</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🥃</div>
+          <div class="card-name">OLD FASHIONED</div>
+          <div class="card-desc">Bourbon · Bitters<br>Sugar</div>
+        </div>
+      </div>
+      <div class="btn">
+        <div class="btn-text">FIND MY DRINK</div>
+        <div class="btn-sub">tap to search nearby</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Abril Fatface -->
+  <div class="option f-abril">
+    <div class="option-label">2 · Abril Fatface — art deco editorial</div>
+    <div class="option-body">
+      <div class="banner">
+        <div class="app-title">MCR-ONI</div>
+        <div class="subtitle">find your poison · manchester</div>
+      </div>
+      <p class="sect">What are you having?</p>
+      <div class="cards">
+        <div class="card sel">
+          <div class="card-icon">🍊</div>
+          <div class="card-name">NEGRONI</div>
+          <div class="card-desc">Gin · Campari<br>Sweet Vermouth</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🥃</div>
+          <div class="card-name">OLD FASHIONED</div>
+          <div class="card-desc">Bourbon · Bitters<br>Sugar</div>
+        </div>
+      </div>
+      <div class="btn">
+        <div class="btn-text">Find My Drink</div>
+        <div class="btn-sub">tap to search nearby</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Rye -->
+  <div class="option f-rye">
+    <div class="option-label">3 · Rye — western tattoo parlour</div>
+    <div class="option-body">
+      <div class="banner">
+        <div class="app-title">MCR-ONI</div>
+        <div class="subtitle">find your poison · manchester</div>
+      </div>
+      <p class="sect">What are you having?</p>
+      <div class="cards">
+        <div class="card sel">
+          <div class="card-icon">🍊</div>
+          <div class="card-name">NEGRONI</div>
+          <div class="card-desc">Gin · Campari<br>Sweet Vermouth</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🥃</div>
+          <div class="card-name">OLD FASHIONED</div>
+          <div class="card-desc">Bourbon · Bitters<br>Sugar</div>
+        </div>
+      </div>
+      <div class="btn">
+        <div class="btn-text">Find My Drink</div>
+        <div class="btn-sub">tap to search nearby</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Boogaloo -->
+  <div class="option f-boogaloo">
+    <div class="option-label">4 · Boogaloo — 1930s cartoon (most Cuphead)</div>
+    <div class="option-body">
+      <div class="banner">
+        <div class="app-title">MCR-ONI</div>
+        <div class="subtitle">find your poison · manchester</div>
+      </div>
+      <p class="sect">What are you having?</p>
+      <div class="cards">
+        <div class="card sel">
+          <div class="card-icon">🍊</div>
+          <div class="card-name">NEGRONI</div>
+          <div class="card-desc">Gin · Campari<br>Sweet Vermouth</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🥃</div>
+          <div class="card-name">OLD FASHIONED</div>
+          <div class="card-desc">Bourbon · Bitters<br>Sugar</div>
+        </div>
+      </div>
+      <div class="btn">
+        <div class="btn-text">Find My Drink</div>
+        <div class="btn-sub">tap to search nearby</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Playfair -->
+  <div class="option f-playfair">
+    <div class="option-label">5 · Playfair Display — cocktail bar premium</div>
+    <div class="option-body">
+      <div class="banner">
+        <div class="app-title">MCR-ONI</div>
+        <div class="subtitle">find your poison · manchester</div>
+      </div>
+      <p class="sect">What are you having?</p>
+      <div class="cards">
+        <div class="card sel">
+          <div class="card-icon">🍊</div>
+          <div class="card-name">Negroni</div>
+          <div class="card-desc">Gin · Campari<br>Sweet Vermouth</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🥃</div>
+          <div class="card-name">Old Fashioned</div>
+          <div class="card-desc">Bourbon · Bitters<br>Sugar</div>
+        </div>
+      </div>
+      <div class="btn">
+        <div class="btn-text">Find My Drink</div>
+        <div class="btn-sub">tap to search nearby</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

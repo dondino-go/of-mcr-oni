@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCR-oni Icons — Preview v2</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: #0D2B2E;
+      font-family: 'Georgia', serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      padding: 48px 24px;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 13px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #E8A820;
+      font-family: 'Georgia', serif;
+      font-weight: normal;
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #F2E8D0;
+      opacity: 0.5;
+    }
+
+    .icons-row {
+      display: flex;
+      gap: 48px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .icon-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .icon-card img {
+      width: 200px;
+      height: 200px;
+      display: block;
+    }
+
+    .icon-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #F2E8D0;
+      opacity: 0.7;
+    }
+
+    /* Sizes preview row */
+    .sizes-row {
+      display: flex;
+      gap: 32px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .size-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .size-group span {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #F2E8D0;
+      opacity: 0.4;
+    }
+
+    .divider {
+      width: 40px;
+      height: 1px;
+      background: #E8A820;
+      opacity: 0.3;
+    }
+
+    /* On-card mock */
+    .card-mock {
+      background: #122E31;
+      border-radius: 20px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 340px;
+      border: 1px solid rgba(242,232,208,0.08);
+    }
+
+    .card-mock img {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+    }
+
+    .card-mock-text h3 {
+      font-size: 17px;
+      color: #F2E8D0;
+      font-family: 'Georgia', serif;
+      font-weight: normal;
+    }
+
+    .card-mock-text p {
+      font-size: 12px;
+      color: #F2E8D0;
+      opacity: 0.5;
+      margin-top: 2px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Cream bg panel */
+    .light-panel {
+      background: #F2E8D0;
+      border-radius: 20px;
+      padding: 32px 40px;
+      display: flex;
+      gap: 32px;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .light-panel .size-group span {
+      color: #0A1A1C;
+      opacity: 0.4;
+    }
+
+    .card-mock-text .tag {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      background: #D42B2B;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    footer {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #F2E8D0;
+      opacity: 0.25;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>MCR-oni — Icon Review</h1>
+    <p>Negroni · Old Fashioned</p>
+  </header>
+
+  <!-- FULL SIZE -->
+  <div class="icons-row">
+    <div class="icon-card">
+      <img src="assets/icon-negroni.svg" alt="Negroni icon">
+      <span class="icon-label">Negroni</span>
+    </div>
+    <div class="icon-card">
+      <img src="assets/icon-old-fashioned.svg" alt="Old Fashioned icon">
+      <span class="icon-label">Old Fashioned</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SCALED DOWN — check legibility at smaller sizes -->
+  <div class="sizes-row">
+    <div class="size-group">
+      <img src="assets/icon-negroni.svg" alt="" style="width:160px;height:160px;">
+      <img src="assets/icon-old-fashioned.svg" alt="" style="width:160px;height:160px;">
+      <span>160px</span>
+    </div>
+    <div class="size-group">
+      <img src="assets/icon-negroni.svg" alt="" style="width:120px;height:120px;">
+      <img src="assets/icon-old-fashioned.svg" alt="" style="width:120px;height:120px;">
+      <span>120px</span>
+    </div>
+    <div class="size-group">
+      <img src="assets/icon-negroni.svg" alt="" style="width:80px;height:80px;">
+      <img src="assets/icon-old-fashioned.svg" alt="" style="width:80px;height:80px;">
+      <span>80px</span>
+    </div>
+    <div class="size-group">
+      <img src="assets/icon-negroni.svg" alt="" style="width:48px;height:48px;">
+      <img src="assets/icon-old-fashioned.svg" alt="" style="width:48px;height:48px;">
+      <span>48px</span>
+    </div>
+    <div class="size-group">
+      <img src="assets/icon-negroni.svg" alt="" style="width:32px;height:32px;">
+      <img src="assets/icon-old-fashioned.svg" alt="" style="width:32px;height:32px;">
+      <span>32px</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- LIGHT BACKGROUND — contrast check -->
+  <div style="text-align:center; margin-bottom:8px;">
+    <span style="font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#F2E8D0; opacity:0.4;">On Light Background</span>
+  </div>
+  <div class="light-panel">
+    <div class="size-group">
+      <img src="assets/icon-negroni.svg" alt="" style="width:120px;height:120px;">
+      <span>Negroni</span>
+    </div>
+    <div class="size-group">
+      <img src="assets/icon-old-fashioned.svg" alt="" style="width:120px;height:120px;">
+      <span>Old Fashioned</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- IN-APP CARD MOCKS -->
+  <div style="display:flex; flex-direction:column; gap:12px; align-items:center;">
+    <div class="card-mock">
+      <img src="assets/icon-negroni.svg" alt="">
+      <div class="card-mock-text">
+        <h3>Negroni</h3>
+        <p>Gin · Campari · Sweet Vermouth</p>
+        <span class="tag">Classic</span>
+      </div>
+    </div>
+    <div class="card-mock">
+      <img src="assets/icon-old-fashioned.svg" alt="">
+      <div class="card-mock-text">
+        <h3>Old Fashioned</h3>
+        <p>Bourbon · Bitters · Sugar · Orange</p>
+        <span class="tag">Classic</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>MCR-oni · Manchester Cocktail Finder</footer>
+
+</body>
+</html>

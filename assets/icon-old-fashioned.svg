@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <clipPath id="of-liquid-clip">
+      <path d="M42,54 L158,54 L145,160 L55,160 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- ============================================================
+       BACKGROUND BADGE — rounded square, cream
+       ============================================================ -->
+  <rect x="6" y="6" width="188" height="188" rx="24" fill="#F2E8D0"/>
+
+  <!-- ============================================================
+       GLASS — rocks glass, slightly wider than Negroni variant
+       ============================================================ -->
+
+  <!-- LIQUID FILL — deep amber whiskey -->
+  <path d="M42,54 L158,54 L145,160 L55,160 Z" fill="#E8A820" clip-path="url(#of-liquid-clip)"/>
+
+  <!-- HATCHING TEXTURE — tighter diagonal lines for richer texture -->
+  <g clip-path="url(#of-liquid-clip)" opacity="0.15">
+    <line x1="14"  y1="54" x2="74"  y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="28"  y1="54" x2="88"  y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="42"  y1="54" x2="102" y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="56"  y1="54" x2="116" y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="70"  y1="54" x2="130" y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="84"  y1="54" x2="144" y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="98"  y1="54" x2="158" y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="112" y1="54" x2="172" y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="126" y1="54" x2="186" y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="140" y1="54" x2="200" y2="182" stroke="#0A1A1C" stroke-width="3.5"/>
+  </g>
+
+  <!-- BITTERS SWIRL — darker red-brown at the bottom, pooling -->
+  <ellipse cx="100" cy="152" rx="40" ry="9"
+           fill="#8B3A0A" opacity="0.5" clip-path="url(#of-liquid-clip)"/>
+  <!-- Second swirl arc — bitters bleeding upward -->
+  <path d="M68,140 Q85,128 100,136 Q115,144 132,132"
+        fill="none" stroke="#8B3A0A" stroke-width="4" stroke-linecap="round"
+        opacity="0.45" clip-path="url(#of-liquid-clip)"/>
+
+  <!-- BIG ICE CUBE — the Old Fashioned statement piece -->
+  <g clip-path="url(#of-liquid-clip)">
+    <!-- Main cube face — large, slightly tilted -->
+    <rect x="64" y="88" width="66" height="58" rx="5"
+          fill="#CBE9ED" stroke="#0A1A1C" stroke-width="3"
+          transform="rotate(6 97 117)"/>
+    <!-- Top face of cube — lighter, 3D -->
+    <path d="M66,90 L72,80 L138,80 L132,90 Z"
+          fill="#E4F6F8" stroke="#0A1A1C" stroke-width="2.5"
+          transform="rotate(6 97 117)"/>
+    <!-- Right face — darker, shadow side -->
+    <path d="M130,90 L136,80 L136,125 L130,135 Z"
+          fill="#92C4CA" stroke="#0A1A1C" stroke-width="2.5"
+          transform="rotate(6 97 117)"/>
+    <!-- Shine strokes on front face -->
+    <line x1="73"  y1="98"  x2="84"  y2="112" stroke="white" stroke-width="3"   stroke-linecap="round" transform="rotate(6 97 117)"/>
+    <line x1="79"  y1="93"  x2="88"  y2="104" stroke="white" stroke-width="1.8" stroke-linecap="round" transform="rotate(6 97 117)"/>
+    <!-- Refraction line — horizontal subtle -->
+    <line x1="68"  y1="118" x2="128" y2="120" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.5" transform="rotate(6 97 117)"/>
+  </g>
+
+  <!-- GLASS OUTLINE -->
+  <path d="M42,54 L158,54 L145,160 L55,160 Z"
+        fill="none" stroke="#0A1A1C" stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- RIM -->
+  <rect x="36" y="46" width="128" height="14" rx="5"
+        fill="#F2E8D0" stroke="#0A1A1C" stroke-width="4.5"/>
+
+  <!-- BASE -->
+  <rect x="50" y="158" width="100" height="16" rx="5"
+        fill="#F2E8D0" stroke="#0A1A1C" stroke-width="4.5"/>
+
+  <!-- BASE BOTTOM WEIGHT LINE -->
+  <rect x="56" y="170" width="88" height="6" rx="3" fill="#0A1A1C"/>
+
+  <!-- ============================================================
+       ORANGE PEEL CURL — top left, loose elegant twist
+       Drawn as a curled ribbon shape, screen-print bold
+       ============================================================ -->
+
+  <!-- Peel curl — organic S-curve ribbon -->
+  <!-- Outer edge of the curl -->
+  <path d="M28,22 C18,30 14,44 24,52 C34,60 50,56 54,44 C58,32 46,22 38,28 C30,34 32,46 40,48"
+        fill="none" stroke="#E8A820" stroke-width="11" stroke-linecap="round"/>
+  <!-- Inner edge outline (dark) — gives the ribbon its form -->
+  <path d="M28,22 C18,30 14,44 24,52 C34,60 50,56 54,44 C58,32 46,22 38,28 C30,34 32,46 40,48"
+        fill="none" stroke="#0A1A1C" stroke-width="5" stroke-linecap="round"/>
+  <!-- Peel highlight — pale stripe down the centre -->
+  <path d="M29,25 C20,33 17,45 26,52 C34,58 47,55 52,45"
+        fill="none" stroke="#F2E8D0" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- ============================================================
+       MARASCHINO CHERRY — top right, on a stem
+       Bold red circle, confident stroke
+       ============================================================ -->
+
+  <!-- Stem — slightly curved, confident -->
+  <path d="M162,48 C164,40 160,30 156,22"
+        fill="none" stroke="#0A1A1C" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Cherry body — pushed down slightly to read fully within viewbox -->
+  <circle cx="154" cy="20" r="16" fill="#D42B2B" stroke="#0A1A1C" stroke-width="4"/>
+
+  <!-- Cherry highlight — top-left shine patch (screen-print dot cluster) -->
+  <ellipse cx="148" cy="14" rx="5" ry="3.5" fill="white" opacity="0.75" transform="rotate(-20 148 14)"/>
+  <!-- Secondary small highlight dot -->
+  <circle cx="158" cy="12" r="2" fill="white" opacity="0.45"/>
+
+  <!-- Dot texture on cherry — screen-print stipple feel -->
+  <circle cx="161" cy="22" r="2.5" fill="#A01E1E" opacity="0.5"/>
+  <circle cx="156" cy="28" r="2"   fill="#A01E1E" opacity="0.4"/>
+  <circle cx="147" cy="24" r="2"   fill="#A01E1E" opacity="0.4"/>
+
+  <!-- ============================================================
+       OUTER BADGE BORDER
+       ============================================================ -->
+  <rect x="6" y="6" width="188" height="188" rx="24"
+        fill="none" stroke="#0A1A1C" stroke-width="5"/>
+
+</svg>

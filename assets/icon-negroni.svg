@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Clip the liquid fill to the inside of the glass -->
+    <clipPath id="n-liquid-clip">
+      <path d="M44,52 L156,52 L143,158 L57,158 Z"/>
+    </clipPath>
+    <!-- Clip for orange slice (half-circle) -->
+    <clipPath id="n-orange-clip">
+      <rect x="128" y="18" width="62" height="40"/>
+    </clipPath>
+  </defs>
+
+  <!-- ============================================================
+       BACKGROUND BADGE — rounded square, cream
+       ============================================================ -->
+  <rect x="6" y="6" width="188" height="188" rx="24" fill="#F2E8D0"/>
+
+  <!-- ============================================================
+       GLASS — tapered rocks glass, drawn with confident geometry
+       Wide at top, slightly narrower at base. Heavy outline.
+       ============================================================ -->
+
+  <!-- LIQUID FILL — deep Negroni red -->
+  <path d="M44,52 L156,52 L143,158 L57,158 Z" fill="#D42B2B" clip-path="url(#n-liquid-clip)"/>
+
+  <!-- HATCHING TEXTURE — diagonal lines screen-print style -->
+  <!-- These lines run at 45° inside the liquid, adding depth -->
+  <g clip-path="url(#n-liquid-clip)" opacity="0.18">
+    <line x1="20" y1="52"  x2="80"  y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="36" y1="52"  x2="96"  y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="52" y1="52"  x2="112" y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="68" y1="52"  x2="128" y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="84" y1="52"  x2="144" y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="100" y1="52" x2="160" y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="116" y1="52" x2="176" y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="132" y1="52" x2="192" y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+    <line x1="148" y1="52" x2="208" y2="180" stroke="#0A1A1C" stroke-width="3.5"/>
+  </g>
+
+  <!-- TEAL TOP LAYER — Campari/vermouth colour band at the top of the liquid -->
+  <path d="M44,52 L156,52 L152,76 L48,76 Z" fill="#0D2B2E" clip-path="url(#n-liquid-clip)" opacity="0.55"/>
+
+  <!-- ICE CUBE — single large cube, slight rotation -->
+  <g clip-path="url(#n-liquid-clip)">
+    <!-- Ice cube body -->
+    <rect x="76" y="100" width="52" height="46" rx="4"
+          fill="#C5E8ED" stroke="#0A1A1C" stroke-width="2.5"
+          transform="rotate(-8 102 123)"/>
+    <!-- Ice highlight — top-left facet -->
+    <path d="M79,103 L84,97 L108,97 L103,103 Z"
+          fill="#E8F8FA" stroke="#0A1A1C" stroke-width="2"
+          transform="rotate(-8 102 123)"/>
+    <!-- Ice right face — darker, 3D pop -->
+    <path d="M128,103 L133,97 L133,133 L128,139 Z"
+          fill="#8CBDC4" stroke="#0A1A1C" stroke-width="2"
+          transform="rotate(-8 102 123)"/>
+    <!-- Shine strokes on ice -->
+    <line x1="83"  y1="110" x2="92"  y2="121" stroke="white" stroke-width="2.5" stroke-linecap="round" transform="rotate(-8 102 123)"/>
+    <line x1="88"  y1="105" x2="95"  y2="113" stroke="white" stroke-width="1.5" stroke-linecap="round" transform="rotate(-8 102 123)"/>
+  </g>
+
+  <!-- GLASS OUTLINE — the actual rocks glass shape, heavy confident stroke -->
+  <!-- Outer silhouette: slightly trapezoidal, flat top and base -->
+  <path d="M44,52 L156,52 L143,158 L57,158 Z"
+        fill="none" stroke="#0A1A1C" stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- RIM — thick flat bar across the top -->
+  <rect x="38" y="44" width="124" height="14" rx="5"
+        fill="#F2E8D0" stroke="#0A1A1C" stroke-width="4.5"/>
+
+  <!-- BASE — solid weighted foot -->
+  <rect x="52" y="156" width="96" height="16" rx="5"
+        fill="#F2E8D0" stroke="#0A1A1C" stroke-width="4.5"/>
+
+  <!-- BASE BOTTOM EDGE — extra weight line -->
+  <rect x="58" y="168" width="84" height="6" rx="3" fill="#0A1A1C"/>
+
+  <!-- ============================================================
+       ORANGE SLICE GARNISH — perched on the right rim
+       Half-slice visible, proper citrus illustration
+       ============================================================ -->
+
+  <!-- Full orange circle (will be clipped to half) -->
+  <!-- Outer rind -->
+  <circle cx="152" cy="44" r="30" fill="#E8A820" stroke="#0A1A1C" stroke-width="4"/>
+  <!-- Pith ring (white) -->
+  <circle cx="152" cy="44" r="23" fill="#F7F0DC" stroke="#0A1A1C" stroke-width="2.5"/>
+  <!-- Flesh (orange) -->
+  <circle cx="152" cy="44" r="18" fill="#F0842A"/>
+  <!-- Segment dividers — 6 segments radiating from centre -->
+  <g stroke="#0A1A1C" stroke-width="2" stroke-linecap="round">
+    <line x1="152" y1="26" x2="152" y2="62"/>
+    <line x1="136" y1="35" x2="168" y2="53"/>
+    <line x1="136" y1="53" x2="168" y2="35"/>
+  </g>
+  <!-- Thin pale segment lines between the bold ones -->
+  <g stroke="#D4621A" stroke-width="1.2" stroke-linecap="round" opacity="0.7">
+    <line x1="152" y1="26" x2="134" y2="44"/>
+    <line x1="152" y1="26" x2="170" y2="44"/>
+    <line x1="134" y1="44" x2="152" y2="62"/>
+    <line x1="170" y1="44" x2="152" y2="62"/>
+  </g>
+  <!-- Centre pip -->
+  <circle cx="152" cy="44" r="5" fill="#E8A820" stroke="#0A1A1C" stroke-width="2"/>
+
+  <!-- The rim rect is drawn BELOW this in z-order so the orange sits on top of the rim.
+       We redraw a small section of the rim outline at the notch so the slice looks seated. -->
+  <!-- Notch slot in the rim — where the slice grips the glass -->
+  <rect x="146" y="50" width="12" height="10" fill="#D42B2B" stroke="none"/>
+  <line x1="146" y1="44" x2="146" y2="60" stroke="#0A1A1C" stroke-width="3.5"/>
+  <line x1="158" y1="44" x2="158" y2="60" stroke="#0A1A1C" stroke-width="3.5"/>
+
+  <!-- ============================================================
+       OUTER BADGE BORDER — punch-cut enamel pin feel
+       ============================================================ -->
+  <rect x="6" y="6" width="188" height="188" rx="24"
+        fill="none" stroke="#0A1A1C" stroke-width="5"/>
+
+</svg>
