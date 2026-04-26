@@ -8,6 +8,7 @@ import { CocktailType, VenueWithCocktails } from '../lib/types';
 import { getVenuesNearby, getTagsForVenues } from '../lib/venues';
 import { Colors, FontFamily } from '../lib/theme';
 import { getDistanceKm, decodePolyline } from '../lib/geo';
+import { sortVenues } from '../lib/sort';
 
 const FALLBACK_LAT = 53.4784;
 const FALLBACK_LNG = -2.2232;
@@ -76,10 +77,10 @@ export default function ResultsScreen() {
       }
       setUserLoc({ lat, lng });
       const results = await getVenuesNearby(cocktail, lat, lng, radiusKm);
-      setVenues(results);
+      setVenues(sortVenues(results, cocktail));
       // Fetch tags separately so they don't block the list appearing
       getTagsForVenues(results.map(v => v.id)).then(tags => {
-        setVenues(prev => prev.map(v => ({ ...v, tags: tags[v.id] ?? [] })));
+        setVenues(prev => sortVenues(prev.map(v => ({ ...v, tags: tags[v.id] ?? [] })), cocktail));
       });
     } catch (e: any) {
       setError(e.message ?? 'Something went wrong');
