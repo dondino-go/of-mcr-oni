@@ -15,6 +15,22 @@ interface ExtractedCocktail {
 
 type Step = 'pick' | 'extracting' | 'confirm' | 'saving' | 'done';
 
+const STICKER_IMAGES: Record<string, any> = {
+  great_vibe:     require('../assets/great_vibes.png'),
+  hits_the_spot:  require('../assets/hits_the_spot.png'),
+  perfectly_made: require('../assets/perfectly-made.png'),
+  late_night_gem: require('../assets/late_night_gem.png'),
+};
+
+const STICKERS = [
+  { id: 'great_vibe',     rotation: '-2.5deg' },
+  { id: 'hits_the_spot',  rotation:  '1.5deg' },
+  { id: 'perfectly_made', rotation:  '-1deg'  },
+  { id: 'late_night_gem', rotation:  '2deg'   },
+] as const;
+
+type StickerID = typeof STICKERS[number]['id'];
+
 export default function ContributeScreen() {
   const { venue_id, venue_name, cocktail } = useLocalSearchParams<{ venue_id: string; venue_name: string; cocktail: string }>();
   const router = useRouter();
@@ -23,6 +39,11 @@ export default function ContributeScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [cocktails, setCocktails] = useState<ExtractedCocktail[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<StickerID[]>([]);
+
+  function toggleTag(id: StickerID) {
+    setSelectedTags(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+  }
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -89,6 +110,11 @@ export default function ContributeScreen() {
         .from('venue_cocktails')
         .upsert(rows, { onConflict: 'venue_id,cocktail' });
       if (dbError) throw dbError;
+      if (selectedTags.length > 0) {
+        supabase.from('venue_tags')
+          .insert(selectedTags.map(tag => ({ venue_id, tag })))
+          .then(() => {});
+      }
       setStep('done');
     } catch (e: any) {
       setError(e.message ?? 'Failed to save');
@@ -147,6 +173,27 @@ export default function ContributeScreen() {
         )}
 
         {error && <Text style={styles.errorText}>{error}</Text>}
+
+        {cocktails.length > 0 && (
+          <View style={styles.stickersSection}>
+            <Text style={styles.stickersLabel}>anything to add?</Text>
+            <View style={styles.stickersGrid}>
+              {STICKERS.map(s => {
+                const sel = selectedTags.includes(s.id);
+                return (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={[styles.sticker, sel && styles.stickerSel, { transform: [{ rotate: s.rotation }] }]}
+                    onPress={() => toggleTag(s.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Image source={STICKER_IMAGES[s.id]} style={styles.stickerImage} resizeMode="contain" />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         <View style={styles.actions}>
           {cocktails.length > 0 && (
@@ -321,5 +368,40 @@ const styles = StyleSheet.create({
     color: Colors.red,
     fontSize: 13,
     marginBottom: 16,
+  },
+  stickersSection: {
+    marginTop: 'auto',
+  },
+  stickersLabel: {
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: Colors.mustard,
+    opacity: 0.6,
+    marginBottom: 12,
+    marginLeft: 2,
+  },
+  stickersGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  sticker: {
+    width: '47%',
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: 'transparent',
+  },
+  stickerSel: {
+    borderColor: Colors.mustard,
+    backgroundColor: 'rgba(232,168,32,0.15)',
+  },
+  stickerImage: {
+    width: '100%',
+    height: '100%',
   },
 });

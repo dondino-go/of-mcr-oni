@@ -1,15 +1,140 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CocktailType } from '../lib/types';
 import { Colors, FontFamily } from '../lib/theme';
+
+const ORBIT_N = 60;
+const ORBIT_INPUT = Array.from({ length: ORBIT_N + 1 }, (_, i) => i / ORBIT_N);
+
+function CocktailButton({ type, selected, onPress }: { type: CocktailType; selected: boolean; onPress: () => void }) {
+  const name = type === 'NEGRONI' ? 'NEGRONI' : 'OLD\nFASHIONED';
+  const ing = type === 'NEGRONI' ? 'Gin · Campari\nSweet Vermouth' : 'Bourbon · Bitters\nSugar · Orange';
+
+  const rotation = useRef(new Animated.Value(0)).current;
+  const animRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  useEffect(() => {
+    if (selected) {
+      rotation.setValue(0);
+      animRef.current = Animated.loop(
+        Animated.timing(rotation, {
+          toValue: 1,
+          duration: 4000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
+      animRef.current.start();
+    } else {
+      animRef.current?.stop();
+      rotation.setValue(0);
+    }
+    return () => animRef.current?.stop();
+  }, [selected]);
+
+  const orbitR = CIRCLE_SIZE / 2 + 7;
+  const translateX = rotation.interpolate({
+    inputRange: ORBIT_INPUT,
+    outputRange: ORBIT_INPUT.map(t => orbitR * Math.cos(2 * Math.PI * t)),
+  });
+  const translateY = rotation.interpolate({
+    inputRange: ORBIT_INPUT,
+    outputRange: ORBIT_INPUT.map(t => orbitR * Math.sin(2 * Math.PI * t)),
+  });
+
+  return (
+    <TouchableOpacity
+      style={[styles.cocktailCircle, selected && styles.cocktailCircleSel]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      {selected && (
+        <Animated.View style={[styles.selDot, { transform: [{ translateX }, { translateY }] }]} />
+      )}
+      <Text style={[styles.cocktailName, selected ? styles.cocktailNameSel : styles.cocktailNameUnsel]}>
+        {name}
+      </Text>
+      <Text style={[styles.cocktailIng, selected ? styles.cocktailIngSel : styles.cocktailIngUnsel]}>
+        {ing}
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
 const PATIENCE_OPTIONS = [
   { label: 'RIGHT NOW', desc: 'Basically around the corner', radiusKm: 0.5 },
   { label: 'GETTING THERE', desc: 'Worth lacing up for', radiusKm: 1.5 },
   { label: "I'M AN EXPLORER", desc: 'Wherever the night takes you', radiusKm: 5 },
 ] as const;
+
+const BUBBLE_DURATIONS = [500, 900, 2000];
+const BUBBLE_X = [170, 193, 214, 235, 256, 275]; // right-center of pill, clear of label text and km column
+
+function PatienceBubbles({ selected, durationMs }: { selected: boolean; durationMs: number }) {
+  const bubbles = useRef(
+    Array.from({ length: 6 }, () => ({ y: new Animated.Value(0), opacity: new Animated.Value(0) }))
+  ).current;
+  const animsRef = useRef<Animated.CompositeAnimation[]>([]);
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    if (selected) {
+      bubbles.forEach((bubble, i) => {
+        bubble.y.setValue(0);
+        bubble.opacity.setValue(0);
+        // Random initial delay within one full cycle so bubbles start at different phases
+        const t = setTimeout(() => {
+          const anim = Animated.loop(
+            Animated.parallel([
+              Animated.timing(bubble.y, { toValue: -44, duration: durationMs, easing: Easing.linear, useNativeDriver: true }),
+              Animated.sequence([
+                Animated.timing(bubble.opacity, { toValue: 0.7, duration: durationMs * 0.15, useNativeDriver: true }),
+                Animated.timing(bubble.opacity, { toValue: 0, duration: durationMs * 0.85, useNativeDriver: true }),
+              ]),
+            ])
+          );
+          animsRef.current[i] = anim;
+          anim.start();
+        }, Math.random() * durationMs);
+        timeoutsRef.current.push(t);
+      });
+    } else {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current = [];
+      animsRef.current.forEach(a => a?.stop());
+      bubbles.forEach(b => { b.y.setValue(0); b.opacity.setValue(0); });
+    }
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      animsRef.current.forEach(a => a?.stop());
+    };
+  }, [selected]);
+
+  if (!selected) return null;
+
+  return (
+    <>
+      {bubbles.map((bubble, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            bottom: 6,
+            left: BUBBLE_X[i],
+            width: 4,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: Colors.mustard,
+            opacity: bubble.opacity,
+            transform: [{ translateY: bubble.y }],
+          }}
+        />
+      ))}
+    </>
+  );
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -51,27 +176,14 @@ export default function HomeScreen() {
 
         <Text style={styles.sectionLabel}>What are you having</Text>
         <View style={styles.cocktailRow}>
-          {(['NEGRONI', 'OLD_FASHIONED'] as CocktailType[]).map(type => {
-            const sel = cocktail === type;
-            const name = type === 'NEGRONI' ? 'NEGRONI' : 'OLD\nFASHIONED';
-            const ing = type === 'NEGRONI' ? 'Gin · Campari\nSweet Vermouth' : 'Bourbon · Bitters\nSugar · Orange';
-            return (
-              <TouchableOpacity
-                key={type}
-                style={[styles.cocktailCircle, sel && styles.cocktailCircleSel]}
-                onPress={() => setCocktail(type)}
-                activeOpacity={0.85}
-              >
-                {sel && <View style={styles.selDot} />}
-                <Text style={[styles.cocktailName, sel ? styles.cocktailNameSel : styles.cocktailNameUnsel]}>
-                  {name}
-                </Text>
-                <Text style={[styles.cocktailIng, sel ? styles.cocktailIngSel : styles.cocktailIngUnsel]}>
-                  {ing}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {(['NEGRONI', 'OLD_FASHIONED'] as CocktailType[]).map(type => (
+            <CocktailButton
+              key={type}
+              type={type}
+              selected={cocktail === type}
+              onPress={() => setCocktail(type)}
+            />
+          ))}
         </View>
 
         <Text style={styles.sectionLabel}>How far will you go</Text>
@@ -86,6 +198,7 @@ export default function HomeScreen() {
                 activeOpacity={0.8}
               >
                 {sel && <View style={styles.distAccent} />}
+                <PatienceBubbles selected={sel} durationMs={BUBBLE_DURATIONS[i]} />
                 <View style={styles.distTextCol}>
                   <Text style={[styles.distName, sel ? styles.distNameSel : styles.distNameUnsel]}>
                     {opt.label}
@@ -256,7 +369,8 @@ const styles = StyleSheet.create({
   },
   selDot: {
     position: 'absolute',
-    top: -16,
+    top: CIRCLE_SIZE / 2 - 4,
+    left: CIRCLE_SIZE / 2 - 4,
     width: 8,
     height: 8,
     borderRadius: 4,

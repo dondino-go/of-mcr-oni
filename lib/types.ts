@@ -22,4 +22,5 @@ export interface VenueCocktail {
 
 export interface VenueWithCocktails extends Venue {
   cocktails: VenueCocktail[];
+  tags?: string[];
 }

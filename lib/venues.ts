@@ -13,6 +13,34 @@ function distanceM(lat1: number, lng1: number, lat2: number, lng2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function topTag(tags: { tag: string }[]): string | null {
+  if (!tags.length) return null;
+  const counts: Record<string, number> = {};
+  for (const { tag } of tags) counts[tag] = (counts[tag] ?? 0) + 1;
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+export async function getTagsForVenues(venueIds: string[]): Promise<Record<string, string[]>> {
+  if (!venueIds.length) return {};
+  const { data } = await supabase
+    .from('venue_tags')
+    .select('venue_id, tag')
+    .in('venue_id', venueIds);
+  if (!data) return {};
+  const byVenue: Record<string, Record<string, number>> = {};
+  for (const row of data) {
+    if (!byVenue[row.venue_id]) byVenue[row.venue_id] = {};
+    byVenue[row.venue_id][row.tag] = (byVenue[row.venue_id][row.tag] ?? 0) + 1;
+  }
+  const result: Record<string, string[]> = {};
+  for (const [venueId, counts] of Object.entries(byVenue)) {
+    result[venueId] = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag]) => tag);
+  }
+  return result;
+}
+
 export async function getVenuesNearby(
   cocktailType: CocktailType,
   userLat: number,
