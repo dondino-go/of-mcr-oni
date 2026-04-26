@@ -1,0 +1,24 @@
+appId: com.marta.ofmcroni
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- assertVisible: "FIND MY DRINK"
+- tapOn: "NEGRONI"
+- tapOn: "I'M AN EXPLORER"
+- tapOn: "FIND MY DRINK"
+- tapOn:
+    text: "Turn on"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: ".*nearby.*"
+    timeout: 20000
+- tapOn: "directions"
+- extendedWaitUntil:
+    visible:
+      text: ".*walking.*"
+    timeout: 20000
+- assertVisible:
+    text: ".*back.*"
