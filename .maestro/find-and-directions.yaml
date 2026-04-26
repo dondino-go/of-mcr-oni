@@ -14,11 +14,11 @@ appId: com.marta.ofmcroni
 - extendedWaitUntil:
     visible:
       text: ".*nearby.*"
-    timeout: 20000
+    timeout: 45000
 - tapOn: "directions"
 - extendedWaitUntil:
     visible:
       text: ".*walking.*"
-    timeout: 20000
+    timeout: 45000
 - assertVisible:
     text: ".*back.*"

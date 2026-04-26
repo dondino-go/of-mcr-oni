@@ -7,7 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test:e2e": "adb shell settings put secure location_mode 3; adb shell cmd location set-location-enabled true; adb emu geo fix -2.2232 53.4784; sleep 1; maestro test .maestro/",
+    "test:e2e": "scripts/e2e.sh",
+    "test:e2e:down": "scripts/e2e-down.sh",
     "test:unit": "jest"
   },
   "jest": {
