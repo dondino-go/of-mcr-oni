@@ -292,6 +292,12 @@ function DirectionsPanel({
           <Text style={styles.directionsPanelVenueName} numberOfLines={1}>{routeState.venue.name}</Text>
           <Text style={styles.directionsPanelSummary}>{routeState.totalDuration} · {routeState.totalDistance} walking</Text>
         </View>
+        <TouchableOpacity
+          style={styles.openInMapsPill}
+          onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${routeState.venue.lat},${routeState.venue.lng}&travelmode=walking`)}
+        >
+          <Text style={styles.openInMapsPillText}>Open in Maps</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.stepsScroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.stepsContent}>
@@ -834,6 +840,25 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: Colors.mustard,
     marginTop: 3,
+  },
+  openInMapsPill: {
+    backgroundColor: Colors.mustard,
+    borderRadius: 999,
+    borderWidth: 2.5,
+    borderColor: Colors.ink,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    shadowColor: Colors.ink,
+    shadowOffset: { width: 2, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
+  },
+  openInMapsPillText: {
+    color: Colors.ink,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   stepsScroll: {
     flex: 1,

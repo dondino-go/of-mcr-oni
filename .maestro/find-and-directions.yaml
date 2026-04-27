@@ -22,3 +22,4 @@ appId: com.marta.ofmcroni
     timeout: 45000
 - assertVisible:
     text: ".*back.*"
+- assertVisible: "Open in Maps"
