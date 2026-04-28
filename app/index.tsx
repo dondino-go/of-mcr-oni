@@ -237,6 +237,13 @@ export default function HomeScreen() {
               <Text style={styles.ctaSub}>tap to search nearby</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            style={styles.addVenueLink}
+            onPress={() => router.push('/add-venue')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.addVenueLinkText}>+ Add a bar</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -517,5 +524,19 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     opacity: 0.5,
     marginTop: 5,
+  },
+  addVenueLink: {
+    alignSelf: 'center',
+    marginTop: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+  },
+  addVenueLinkText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: Colors.mustard,
+    opacity: 0.75,
   },
 });

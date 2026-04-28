@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../lib/supabase';
 import { Colors, FontFamily } from '../lib/theme';
+import { getMyVenueIds, removeMyVenue } from '../lib/myVenues';
+import { deleteVenue } from '../lib/venues';
 
 const SUPABASE_URL = 'https://nkkmpkhzufdyyibwimpw.supabase.co';
 
@@ -32,7 +34,7 @@ const STICKERS = [
 type StickerID = typeof STICKERS[number]['id'];
 
 export default function ContributeScreen() {
-  const { venue_id, venue_name, cocktail } = useLocalSearchParams<{ venue_id: string; venue_name: string; cocktail: string }>();
+  const { venue_id, venue_name, cocktail } = useLocalSearchParams<{ venue_id: string; venue_name: string; cocktail?: string }>();
   const router = useRouter();
 
   const [step, setStep] = useState<Step>('pick');
@@ -40,6 +42,11 @@ export default function ContributeScreen() {
   const [cocktails, setCocktails] = useState<ExtractedCocktail[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<StickerID[]>([]);
+  const [isMine, setIsMine] = useState(false);
+
+  useEffect(() => {
+    getMyVenueIds().then(ids => setIsMine(ids.has(venue_id)));
+  }, [venue_id]);
 
   function toggleTag(id: StickerID) {
     setSelectedTags(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
@@ -115,6 +122,7 @@ export default function ContributeScreen() {
           .insert(selectedTags.map(tag => ({ venue_id, tag })))
           .then(() => {});
       }
+      await removeMyVenue(venue_id);
       setStep('done');
     } catch (e: any) {
       setError(e.message ?? 'Failed to save');
@@ -122,15 +130,46 @@ export default function ContributeScreen() {
     }
   }
 
+  function confirmRemoveBar() {
+    Alert.alert(
+      'Remove this bar?',
+      `${venue_name} will be removed from the list. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: removeBar },
+      ],
+    );
+  }
+
+  async function removeBar() {
+    setStep('saving');
+    try {
+      await deleteVenue(venue_id);
+      await removeMyVenue(venue_id);
+      router.replace('/');
+    } catch (e: any) {
+      setError(e.message ?? 'Could not remove bar');
+      setStep('confirm');
+    }
+  }
+
   if (step === 'done') {
+    const hasCocktailContext = !!cocktail;
     return (
       <View style={styles.centered}>
         <Text style={styles.doneTitle}>Done!</Text>
         <Text style={styles.doneSub}>Thanks for keeping the data fresh.</Text>
         <View style={styles.ctaContainer}>
           <View style={styles.ctaShadow} />
-          <TouchableOpacity style={styles.cta} onPress={() => router.replace({ pathname: '/results', params: { cocktail } })}>
-            <Text style={styles.ctaText}>BACK TO RESULTS</Text>
+          <TouchableOpacity
+            style={styles.cta}
+            onPress={() =>
+              hasCocktailContext
+                ? router.replace({ pathname: '/results', params: { cocktail } })
+                : router.replace('/')
+            }
+          >
+            <Text style={styles.ctaText}>{hasCocktailContext ? 'BACK TO RESULTS' : 'BACK HOME'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -207,6 +246,11 @@ export default function ContributeScreen() {
           <TouchableOpacity style={styles.secondaryBtn} onPress={() => setStep('pick')}>
             <Text style={styles.secondaryBtnText}>Try another photo</Text>
           </TouchableOpacity>
+          {cocktails.length === 0 && isMine && (
+            <TouchableOpacity style={styles.removeBtn} onPress={confirmRemoveBar}>
+              <Text style={styles.removeBtnText}>Remove this bar</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
     );
@@ -336,6 +380,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.cream,
     opacity: 0.5,
+  },
+  removeBtn: {
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: 'rgba(212,43,43,0.5)',
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  removeBtnText: {
+    fontSize: 13,
+    color: Colors.red,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   loadingText: {
     color: Colors.cream,

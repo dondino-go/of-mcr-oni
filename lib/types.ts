@@ -7,6 +7,8 @@ export interface Venue {
   lat: number;
   lng: number;
   google_place_id: string | null;
+  google_rating: number | null;
+  google_rating_count: number | null;
   distance_m?: number;
 }
 

@@ -1,0 +1,28 @@
+appId: com.marta.ofmcroni
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- assertVisible: "FIND MY DRINK"
+- tapOn: "+ Add a bar"
+- assertVisible: "Add a bar"
+- tapOn:
+    id: ".*"
+    text: "Bar name.*"
+    optional: true
+- inputText: "Northern Quarter"
+- extendedWaitUntil:
+    visible:
+      text: ".*Manchester.*"
+    timeout: 30000
+# Tap the first venue result card (matches any Manchester address)
+- tapOn:
+    text: ".*Manchester.*"
+    index: 0
+- extendedWaitUntil:
+    visible: "ADD A MENU PHOTO"
+    timeout: 15000
+- assertVisible: "Done — back home"
+- tapOn: "Done — back home"
+- assertVisible: "FIND MY DRINK"

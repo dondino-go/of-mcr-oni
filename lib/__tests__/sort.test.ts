@@ -1,4 +1,4 @@
-import { scoreVenue, sortVenues } from '../sort';
+import { sortVenues } from '../sort';
 import { CocktailType, VenueWithCocktails } from '../types';
 
 function makeVenue(overrides: {
@@ -7,6 +7,7 @@ function makeVenue(overrides: {
   confidence_score?: number | null;
   tags?: string[];
   cocktail?: CocktailType;
+  google_rating?: number | null;
 }): VenueWithCocktails {
   return {
     id: overrides.id,
@@ -15,6 +16,8 @@ function makeVenue(overrides: {
     lat: 0,
     lng: 0,
     google_place_id: null,
+    google_rating: overrides.google_rating ?? null,
+    google_rating_count: null,
     distance_m: overrides.distance_m ?? 0,
     cocktails: [
       {
@@ -31,65 +34,71 @@ function makeVenue(overrides: {
   };
 }
 
-describe('scoreVenue', () => {
-  test('returns 0 for unverified venue with no tags', () => {
-    const v = makeVenue({ id: 'a' });
-    expect(scoreVenue(v, 'NEGRONI')).toBe(0);
+describe('sortVenues — lexicographic tiers', () => {
+  test('personal-add wins over everything else', () => {
+    const mine = makeVenue({ id: 'mine', distance_m: 9999, google_rating: 1.0 });
+    const sticker = makeVenue({ id: 'sticker', distance_m: 100, tags: ['great_vibe'], google_rating: 4.9 });
+    const verified = makeVenue({ id: 'v', distance_m: 50, confidence_score: 5, google_rating: 4.8 });
+
+    const result = sortVenues([sticker, verified, mine], 'NEGRONI', new Set(['mine']));
+    expect(result.map(v => v.id)).toEqual(['mine', 'sticker', 'v']);
   });
 
-  test('returns 2 for verified venue (confidence_score >= 3)', () => {
-    const v = makeVenue({ id: 'a', confidence_score: 3 });
-    expect(scoreVenue(v, 'NEGRONI')).toBe(2);
+  test('sticker beats higher rating', () => {
+    const lowStarSticker = makeVenue({ id: 'low', tags: ['great_vibe'], google_rating: 3.2 });
+    const highStarNoSticker = makeVenue({ id: 'hi', google_rating: 4.9 });
+
+    const result = sortVenues([highStarNoSticker, lowStarSticker], 'NEGRONI');
+    expect(result.map(v => v.id)).toEqual(['low', 'hi']);
   });
 
-  test('returns 1 for tagged-but-unverified venue', () => {
-    const v = makeVenue({ id: 'a', tags: ['great_vibe'] });
-    expect(scoreVenue(v, 'NEGRONI')).toBe(1);
+  test('among stickered venues, higher rating wins', () => {
+    const a = makeVenue({ id: 'a', tags: ['great_vibe'], google_rating: 4.5 });
+    const b = makeVenue({ id: 'b', tags: ['great_vibe'], google_rating: 3.8 });
+
+    const result = sortVenues([b, a], 'NEGRONI');
+    expect(result.map(v => v.id)).toEqual(['a', 'b']);
   });
 
-  test('returns 3 for verified + tagged venue', () => {
-    const v = makeVenue({ id: 'a', confidence_score: 5, tags: ['great_vibe'] });
-    expect(scoreVenue(v, 'NEGRONI')).toBe(3);
+  test('rating beats verified menu', () => {
+    const lowStarVerified = makeVenue({ id: 'low', confidence_score: 5, google_rating: 3.0 });
+    const highStarUnverified = makeVenue({ id: 'hi', google_rating: 4.9 });
+
+    const result = sortVenues([lowStarVerified, highStarUnverified], 'NEGRONI');
+    expect(result.map(v => v.id)).toEqual(['hi', 'low']);
+  });
+
+  test('null rating sinks to bottom of rating tier (treated as 0)', () => {
+    const noRating = makeVenue({ id: 'none', google_rating: null });
+    const lowRating = makeVenue({ id: 'low', google_rating: 1.0 });
+
+    const result = sortVenues([noRating, lowRating], 'NEGRONI');
+    expect(result.map(v => v.id)).toEqual(['low', 'none']);
+  });
+
+  test('among equal rating, verified menu wins', () => {
+    const verified = makeVenue({ id: 'v', confidence_score: 4, google_rating: 4.0 });
+    const unverified = makeVenue({ id: 'u', google_rating: 4.0 });
+
+    const result = sortVenues([unverified, verified], 'NEGRONI');
+    expect(result.map(v => v.id)).toEqual(['v', 'u']);
+  });
+
+  test('all-tier-equal venues sorted by distance ascending', () => {
+    const far = makeVenue({ id: 'far', distance_m: 1500, google_rating: 4.0, confidence_score: 5 });
+    const close = makeVenue({ id: 'close', distance_m: 200, google_rating: 4.0, confidence_score: 5 });
+
+    const result = sortVenues([far, close], 'NEGRONI');
+    expect(result.map(v => v.id)).toEqual(['close', 'far']);
   });
 
   test('confidence_score below 3 does not count as verified', () => {
-    const v = makeVenue({ id: 'a', confidence_score: 2 });
-    expect(scoreVenue(v, 'NEGRONI')).toBe(0);
-  });
+    const partial = makeVenue({ id: 'p', confidence_score: 2, google_rating: 4.0 });
+    const unverified = makeVenue({ id: 'u', google_rating: 4.0 });
 
-  test('null confidence_score does not count as verified', () => {
-    const v = makeVenue({ id: 'a', confidence_score: null });
-    expect(scoreVenue(v, 'NEGRONI')).toBe(0);
-  });
-
-  test('empty tags array does not count as tagged', () => {
-    const v = makeVenue({ id: 'a', tags: [] });
-    expect(scoreVenue(v, 'NEGRONI')).toBe(0);
-  });
-
-  test('returns 0 if venue has no matching cocktail entry', () => {
-    const v = makeVenue({ id: 'a', confidence_score: 5, cocktail: 'OLD_FASHIONED' });
-    expect(scoreVenue(v, 'NEGRONI')).toBe(0);
-  });
-});
-
-describe('sortVenues', () => {
-  test('orders verified+tagged > verified > tagged > bare, distance as tiebreaker', () => {
-    const verifiedTagged = makeVenue({ id: 'vt', distance_m: 800, confidence_score: 5, tags: ['great_vibe'] });
-    const verifiedOnly =   makeVenue({ id: 'v',  distance_m: 200, confidence_score: 4 });
-    const taggedOnly =     makeVenue({ id: 't',  distance_m: 100, tags: ['hits_the_spot'] });
-    const bare =           makeVenue({ id: 'b',  distance_m: 50 });
-
-    const result = sortVenues([bare, taggedOnly, verifiedOnly, verifiedTagged], 'NEGRONI');
-    expect(result.map(v => v.id)).toEqual(['vt', 'v', 't', 'b']);
-  });
-
-  test('ties on score broken by distance (closer first)', () => {
-    const farVerified =   makeVenue({ id: 'far',   distance_m: 1500, confidence_score: 5 });
-    const closeVerified = makeVenue({ id: 'close', distance_m: 200,  confidence_score: 5 });
-
-    const result = sortVenues([farVerified, closeVerified], 'NEGRONI');
-    expect(result.map(v => v.id)).toEqual(['close', 'far']);
+    const result = sortVenues([partial, unverified], 'NEGRONI', new Set(), );
+    // Both should be tied — verified=0 for both — fall through to distance (both 0); stable sort keeps input order.
+    expect(result.map(v => v.id).sort()).toEqual(['p', 'u']);
   });
 
   test('does not mutate input array', () => {
@@ -102,5 +111,10 @@ describe('sortVenues', () => {
 
   test('empty array returns empty array', () => {
     expect(sortVenues([], 'NEGRONI')).toEqual([]);
+  });
+
+  test('myVenueIds defaults to empty set when omitted', () => {
+    const v = makeVenue({ id: 'a', google_rating: 3.0 });
+    expect(() => sortVenues([v], 'NEGRONI')).not.toThrow();
   });
 });

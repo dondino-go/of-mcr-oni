@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import { CocktailType, VenueWithCocktails } from './types';
+import { CocktailType, VenueCocktail, VenueWithCocktails } from './types';
+import { filterVenueForCocktail } from './inclusion';
 
 function distanceM(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000;
@@ -19,6 +20,7 @@ function topTag(tags: { tag: string }[]): string | null {
   for (const { tag } of tags) counts[tag] = (counts[tag] ?? 0) + 1;
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
+
 
 export async function getTagsForVenues(venueIds: string[]): Promise<Record<string, string[]>> {
   if (!venueIds.length) return {};
@@ -53,12 +55,11 @@ export async function getVenuesNearby(
   const { data, error } = await supabase
     .from('venues')
     .select(`
-      id, name, address, lat, lng, google_place_id,
-      venue_cocktails!inner (
+      id, name, address, lat, lng, google_place_id, google_rating, google_rating_count,
+      venue_cocktails (
         id, venue_id, cocktail, price, notes, confidence_score, last_verified_at
       )
     `)
-    .eq('venue_cocktails.cocktail', cocktailType)
     .gte('lat', userLat - latDelta)
     .lte('lat', userLat + latDelta)
     .gte('lng', userLng - lngDelta)
@@ -68,11 +69,22 @@ export async function getVenuesNearby(
   if (!data) return [];
 
   return (data as any[])
-    .map(v => ({
-      ...v,
-      cocktails: v.venue_cocktails,
-      distance_m: Math.round(distanceM(userLat, userLng, v.lat, v.lng)),
-    }))
+    .map(v => {
+      const { include, matchingCocktails } = filterVenueForCocktail(v.venue_cocktails ?? [], cocktailType);
+      return {
+        ...v,
+        _include: include,
+        cocktails: matchingCocktails,
+        distance_m: Math.round(distanceM(userLat, userLng, v.lat, v.lng)),
+      };
+    })
+    .filter(v => v._include)
     .filter(v => v.distance_m <= radiusKm * 1000)
-    .sort((a, b) => a.distance_m - b.distance_m);
+    .map(({ _include, venue_cocktails, ...rest }: any) => rest as VenueWithCocktails)
+    .sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0));
+}
+
+export async function deleteVenue(id: string): Promise<void> {
+  const { error } = await supabase.from('venues').delete().eq('id', id);
+  if (error) throw error;
 }

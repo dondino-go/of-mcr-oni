@@ -9,6 +9,7 @@ import { getVenuesNearby, getTagsForVenues } from '../lib/venues';
 import { Colors, FontFamily } from '../lib/theme';
 import { getDistanceKm, decodePolyline } from '../lib/geo';
 import { sortVenues } from '../lib/sort';
+import { getMyVenueIds } from '../lib/myVenues';
 
 const FALLBACK_LAT = 53.4784;
 const FALLBACK_LNG = -2.2232;
@@ -45,6 +46,7 @@ export default function ResultsScreen() {
   const router = useRouter();
 
   const [venues, setVenues] = useState<VenueWithCocktails[]>([]);
+  const [myVenueIds, setMyVenueIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -76,11 +78,15 @@ export default function ResultsScreen() {
         }
       }
       setUserLoc({ lat, lng });
-      const results = await getVenuesNearby(cocktail, lat, lng, radiusKm);
-      setVenues(sortVenues(results, cocktail));
+      const [results, ids] = await Promise.all([
+        getVenuesNearby(cocktail, lat, lng, radiusKm),
+        getMyVenueIds(),
+      ]);
+      setMyVenueIds(ids);
+      setVenues(sortVenues(results, cocktail, ids));
       // Fetch tags separately so they don't block the list appearing
       getTagsForVenues(results.map(v => v.id)).then(tags => {
-        setVenues(prev => sortVenues(prev.map(v => ({ ...v, tags: tags[v.id] ?? [] })), cocktail));
+        setVenues(prev => sortVenues(prev.map(v => ({ ...v, tags: tags[v.id] ?? [] })), cocktail, ids));
       });
     } catch (e: any) {
       setError(e.message ?? 'Something went wrong');
@@ -235,6 +241,9 @@ export default function ResultsScreen() {
           {venues.length === 0 ? (
             <View style={styles.empty}>
               <Text style={styles.emptyText}>No {label} bars within range.{'\n'}Try more patience!</Text>
+              <TouchableOpacity style={styles.addVenueLink} onPress={() => router.push('/add-venue')}>
+                <Text style={styles.addVenueLinkText}>+ Add a bar</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <FlatList
@@ -250,11 +259,18 @@ export default function ResultsScreen() {
                   cocktailType={cocktail}
                   index={index}
                   selected={item.id === selectedId}
+                  isMine={myVenueIds.has(item.id)}
                   onPress={() => selectVenue(item.id)}
                   onDirections={() => fetchDirections(item)}
                   directionsLoading={routeLoading && selectedId === item.id}
                 />
               )}
+              ListFooterComponent={
+                <TouchableOpacity style={styles.addVenueFooter} onPress={() => router.push('/add-venue')}>
+                  <Text style={styles.addVenueFooterEyebrow}>Don't see your bar?</Text>
+                  <Text style={styles.addVenueFooterText}>+ Add a bar</Text>
+                </TouchableOpacity>
+              }
               contentContainerStyle={styles.listContent}
             />
           )}
@@ -336,6 +352,7 @@ function VenueCard({
   cocktailType,
   index,
   selected,
+  isMine,
   onPress,
   onDirections,
   directionsLoading,
@@ -344,12 +361,21 @@ function VenueCard({
   cocktailType: CocktailType;
   index: number;
   selected: boolean;
+  isMine: boolean;
   onPress: () => void;
   onDirections: () => void;
   directionsLoading: boolean;
 }) {
   const router = useRouter();
-  const cocktail = venue.cocktails.find(c => c.cocktail === cocktailType)!;
+  const cocktail = venue.cocktails.find(c => c.cocktail === cocktailType);
+  const hasMenuData = !!cocktail;
+  const isLowConfidence = hasMenuData && cocktail.confidence_score != null && cocktail.confidence_score < 3;
+  const pillText: string | null =
+    !hasMenuData && isMine ? 'to be explored'
+    : !hasMenuData ? 'unverified'
+    : isLowConfidence ? 'unverified'
+    : null;
+  const updateLabel = !hasMenuData && isMine ? '+ add menu' : '+ update';
   const distanceText = venue.distance_m! < 1000
     ? `${venue.distance_m}m`
     : `${(venue.distance_m! / 1000).toFixed(1)}km`;
@@ -404,21 +430,21 @@ function VenueCard({
         </Text>
 
         <View style={styles.cardBottom}>
-          {cocktail.price != null && (
+          {hasMenuData && cocktail.price != null && (
             <Text style={[styles.venuePrice, !selected && styles.venuePriceUnsel]}>
               £{cocktail.price.toFixed(2)}
             </Text>
           )}
-          {cocktail.confidence_score != null && cocktail.confidence_score < 3 && (
+          {pillText && (
             <View style={[styles.badge, !selected && styles.badgeUnsel]}>
-              <Text style={[styles.badgeText, !selected && styles.badgeTextUnsel]}>unverified</Text>
+              <Text style={[styles.badgeText, !selected && styles.badgeTextUnsel]}>{pillText}</Text>
             </View>
           )}
           <TouchableOpacity
             style={[styles.updateBtn, !selected && styles.updateBtnUnsel]}
             onPress={() => router.push({ pathname: '/contribute', params: { venue_id: venue.id, venue_name: venue.name, cocktail: cocktailType } })}
           >
-            <Text style={[styles.updateText, !selected && styles.updateTextUnsel]}>+ update</Text>
+            <Text style={[styles.updateText, !selected && styles.updateTextUnsel]}>{updateLabel}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.directionsBtn, !selected && styles.directionsBtnUnsel]}
@@ -581,6 +607,44 @@ const styles = StyleSheet.create({
     opacity: 0.4,
     textAlign: 'center',
     lineHeight: 28,
+  },
+  addVenueLink: {
+    marginTop: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  addVenueLinkText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: Colors.mustard,
+    opacity: 0.85,
+  },
+  addVenueFooter: {
+    marginTop: 14,
+    marginBottom: 8,
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(242,232,208,0.08)',
+  },
+  addVenueFooterEyebrow: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: Colors.cream,
+    opacity: 0.35,
+    marginBottom: 4,
+  },
+  addVenueFooterText: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: Colors.mustard,
+    opacity: 0.85,
   },
 
   // Venue card
