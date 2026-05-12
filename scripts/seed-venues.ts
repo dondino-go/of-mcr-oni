@@ -4,10 +4,25 @@ const SUPABASE_URL = 'https://nkkmpkhzufdyyibwimpw.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY ?? '';
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ?? '';
 
-// Manchester city centre
-const MANCHESTER_LAT = 53.4808;
-const MANCHESTER_LNG = -2.2274;
-const RADIUS_M = 5000;
+type SearchPoint = { lat: number; lng: number; radiusM: number; label: string };
+
+const CITIES: Record<string, { name: string; searchPoints: SearchPoint[] }> = {
+  manchester: {
+    name: 'Manchester',
+    searchPoints: [
+      { lat: 53.4808, lng: -2.2274, radiusM: 5000, label: 'centre' },
+    ],
+  },
+  london: {
+    name: 'London',
+    // Two search points because the Places API caps at ~60 results per circle —
+    // central covers the West End/City, Crystal Palace covers the home-area fallback.
+    searchPoints: [
+      { lat: 51.5074, lng: -0.1278, radiusM: 5000, label: 'central' },
+      { lat: 51.4267, lng: -0.0830, radiusM: 5000, label: 'crystal palace' },
+    ],
+  },
+};
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -18,13 +33,13 @@ interface PlacesResult {
   location: { latitude: number; longitude: number };
 }
 
-async function fetchPlaces(pageToken?: string): Promise<{ places: PlacesResult[]; nextPageToken?: string }> {
+async function fetchPlaces(point: SearchPoint, pageToken?: string): Promise<{ places: PlacesResult[]; nextPageToken?: string }> {
   const body: any = {
     includedTypes: ['bar', 'cocktail_bar'],
     locationRestriction: {
       circle: {
-        center: { latitude: MANCHESTER_LAT, longitude: MANCHESTER_LNG },
-        radius: RADIUS_M,
+        center: { latitude: point.lat, longitude: point.lng },
+        radius: point.radiusM,
       },
     },
     maxResultCount: 20,
@@ -49,23 +64,40 @@ async function fetchPlaces(pageToken?: string): Promise<{ places: PlacesResult[]
   return res.json() as Promise<{ places: PlacesResult[]; nextPageToken?: string }>;
 }
 
+async function fetchAllForPoint(point: SearchPoint): Promise<PlacesResult[]> {
+  const out: PlacesResult[] = [];
+  let pageToken: string | undefined;
+  do {
+    const result = await fetchPlaces(point, pageToken);
+    out.push(...(result.places ?? []));
+    pageToken = result.nextPageToken;
+    if (pageToken) await new Promise(r => setTimeout(r, 2000));
+  } while (pageToken);
+  return out;
+}
+
 async function main() {
   if (!SUPABASE_SERVICE_KEY) throw new Error('Missing SUPABASE_SERVICE_KEY env var');
   if (!GOOGLE_API_KEY) throw new Error('Missing GOOGLE_API_KEY env var');
 
-  console.log('Fetching bars from Google Places...');
+  const cityArg = (process.argv[2] ?? 'manchester').toLowerCase();
+  const city = CITIES[cityArg];
+  if (!city) {
+    throw new Error(`Unknown city "${cityArg}". Known: ${Object.keys(CITIES).join(', ')}`);
+  }
 
-  const allPlaces: PlacesResult[] = [];
-  let pageToken: string | undefined;
+  console.log(`Seeding ${city.name} (${city.searchPoints.length} search point${city.searchPoints.length > 1 ? 's' : ''})...`);
 
-  do {
-    const result = await fetchPlaces(pageToken);
-    allPlaces.push(...(result.places ?? []));
-    pageToken = result.nextPageToken;
-    if (pageToken) await new Promise(r => setTimeout(r, 2000)); // respect rate limit
-  } while (pageToken);
+  const byPlaceId = new Map<string, PlacesResult>();
+  for (const point of city.searchPoints) {
+    console.log(`  · ${point.label} (${point.lat}, ${point.lng}, ${point.radiusM}m)`);
+    const results = await fetchAllForPoint(point);
+    for (const r of results) byPlaceId.set(r.id, r);
+    console.log(`    found ${results.length}, running total unique: ${byPlaceId.size}`);
+  }
 
-  console.log(`Found ${allPlaces.length} places`);
+  const allPlaces = [...byPlaceId.values()];
+  console.log(`Total unique places: ${allPlaces.length}`);
 
   const venues = allPlaces.map(p => ({
     name: p.displayName.text,

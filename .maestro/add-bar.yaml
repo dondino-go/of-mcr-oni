@@ -5,6 +5,17 @@ appId: com.marta.ofmcroni
     permissions:
       all: allow
 - assertVisible: "FIND MY DRINK"
+# Add-a-bar is no longer on the home screen — reach it via results.
+- tapOn: "NEGRONI"
+- tapOn: "I'M AN EXPLORER"
+- tapOn: "FIND MY DRINK"
+- tapOn:
+    text: "Turn on"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: ".*nearby.*"
+    timeout: 45000
 - tapOn: "+ Add a bar"
 - assertVisible: "Add a bar"
 - tapOn:

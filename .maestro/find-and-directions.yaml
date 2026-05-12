@@ -5,6 +5,8 @@ appId: com.marta.ofmcroni
     permissions:
       all: allow
 - assertVisible: "FIND MY DRINK"
+- assertVisible:
+    text: ".*MANCHESTER.*"
 - tapOn: "NEGRONI"
 - tapOn: "I'M AN EXPLORER"
 - tapOn: "FIND MY DRINK"

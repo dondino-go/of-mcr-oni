@@ -7,13 +7,10 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { CocktailType, VenueWithCocktails } from '../lib/types';
 import { getVenuesNearby, getTagsForVenues } from '../lib/venues';
 import { Colors, FontFamily } from '../lib/theme';
-import { getDistanceKm, decodePolyline } from '../lib/geo';
+import { decodePolyline } from '../lib/geo';
 import { sortVenues } from '../lib/sort';
 import { getMyVenueIds } from '../lib/myVenues';
-
-const FALLBACK_LAT = 53.4784;
-const FALLBACK_LNG = -2.2232;
-const MANCHESTER_RADIUS_KM = 30;
+import { CITIES, CityId, resolveActiveLocation } from '../lib/cities';
 
 const MAP_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#1A4248' }] },
@@ -41,8 +38,9 @@ type RouteState = {
 
 export default function ResultsScreen() {
   const insets = useSafeAreaInsets();
-  const { cocktail, radiusKm: radiusKmParam } = useLocalSearchParams<{ cocktail: CocktailType; radiusKm: string }>();
+  const { cocktail, radiusKm: radiusKmParam, cityId: cityIdParam } = useLocalSearchParams<{ cocktail: CocktailType; radiusKm: string; cityId?: CityId }>();
   const radiusKm = parseFloat(radiusKmParam ?? '5');
+  const city = CITIES[cityIdParam ?? 'manchester'] ?? CITIES.manchester;
   const router = useRouter();
 
   const [venues, setVenues] = useState<VenueWithCocktails[]>([]);
@@ -50,7 +48,7 @@ export default function ResultsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [userLoc, setUserLoc] = useState({ lat: FALLBACK_LAT, lng: FALLBACK_LNG });
+  const [userLoc, setUserLoc] = useState({ lat: city.fallbackWhenAway.lat, lng: city.fallbackWhenAway.lng });
   const [routeState, setRouteState] = useState<RouteState>(null);
   const [routeLoading, setRouteLoading] = useState(false);
 
@@ -62,21 +60,18 @@ export default function ResultsScreen() {
 
   async function load() {
     try {
-      let lat = FALLBACK_LAT, lng = FALLBACK_LNG;
+      let deviceLoc: { lat: number; lng: number } | null = null;
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === 'granted') {
         try {
           const loc = await Location.getLastKnownPositionAsync()
             ?? await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-          const distKm = getDistanceKm(loc.coords.latitude, loc.coords.longitude, FALLBACK_LAT, FALLBACK_LNG);
-          if (distKm <= MANCHESTER_RADIUS_KM) {
-            lat = loc.coords.latitude;
-            lng = loc.coords.longitude;
-          }
+          deviceLoc = { lat: loc.coords.latitude, lng: loc.coords.longitude };
         } catch {
-          // location lookup failed (services off, no fix, etc.) — keep Manchester fallback
+          // location lookup failed (services off, no fix, etc.) — fall back to city anchor
         }
       }
+      const { lat, lng } = resolveActiveLocation(city, deviceLoc);
       setUserLoc({ lat, lng });
       const [results, ids] = await Promise.all([
         getVenuesNearby(cocktail, lat, lng, radiusKm),

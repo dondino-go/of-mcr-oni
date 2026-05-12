@@ -10,11 +10,7 @@ import { Colors, FontFamily } from '../lib/theme';
 import { searchPlaces, PlaceSuggestion } from '../lib/places';
 import { addMyVenue } from '../lib/myVenues';
 import { supabase } from '../lib/supabase';
-import { getDistanceKm } from '../lib/geo';
-
-const FALLBACK_LAT = 53.4784;
-const FALLBACK_LNG = -2.2232;
-const MANCHESTER_RADIUS_KM = 30;
+import { CITIES, loadActiveCity, resolveActiveLocation } from '../lib/cities';
 
 type Step = 'search' | 'saving' | 'done';
 
@@ -26,26 +22,28 @@ export default function AddVenueScreen() {
   const [results, setResults] = useState<PlaceSuggestion[]>([]);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [bias, setBias] = useState<{ lat: number; lng: number }>({ lat: FALLBACK_LAT, lng: FALLBACK_LNG });
+  const [bias, setBias] = useState<{ lat: number; lng: number }>({
+    lat: CITIES.manchester.fallbackWhenAway.lat,
+    lng: CITIES.manchester.fallbackWhenAway.lng,
+  });
   const [savedVenue, setSavedVenue] = useState<{ id: string; name: string } | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Bias search to user location if available
+  // Bias search to user location if available, otherwise the active city's anchor.
   useEffect(() => {
     (async () => {
+      let deviceLoc: { lat: number; lng: number } | null = null;
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return;
-        const loc = await Location.getLastKnownPositionAsync()
-          ?? await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        const distKm = getDistanceKm(loc.coords.latitude, loc.coords.longitude, FALLBACK_LAT, FALLBACK_LNG);
-        if (distKm <= MANCHESTER_RADIUS_KM) {
-          setBias({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+        if (status === 'granted') {
+          const loc = await Location.getLastKnownPositionAsync()
+            ?? await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          deviceLoc = { lat: loc.coords.latitude, lng: loc.coords.longitude };
         }
-      } catch {
-        // keep Manchester fallback
-      }
+      } catch {}
+      const { city } = await loadActiveCity({ gpsLoc: deviceLoc });
+      setBias(resolveActiveLocation(city, deviceLoc));
     })();
   }, []);
 

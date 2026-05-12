@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, PanResponder } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Location from 'expo-location';
 import { CocktailType } from '../lib/types';
 import { Colors, FontFamily } from '../lib/theme';
+import { CITIES, CITY_IDS, CityId, loadActiveCity, setActiveCityId } from '../lib/cities';
 
 const ORBIT_N = 60;
 const ORBIT_INPUT = Array.from({ length: ORBIT_N + 1 }, (_, i) => i / ORBIT_N);
@@ -136,17 +138,132 @@ function PatienceBubbles({ selected, durationMs }: { selected: boolean; duration
   );
 }
 
+const LONG_PRESS_MS = 400;
+const DRAG_STEP_PX = 40;
+const TAP_SLOP_PX = 8;
+
+function CityIndicator({
+  activeCityId,
+  onChange,
+}: {
+  activeCityId: CityId | null;
+  onChange: (id: CityId) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [previewIdx, setPreviewIdx] = useState(0);
+  const editingRef = useRef(false);
+  const previewIdxRef = useRef(0);
+  const initialIdxRef = useRef(0);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scale = useRef(new Animated.Value(1)).current;
+
+  editingRef.current = editing;
+  previewIdxRef.current = previewIdx;
+
+  useEffect(() => {
+    Animated.timing(scale, {
+      toValue: editing ? 1.4 : 1,
+      duration: 140,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [editing]);
+
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => activeCityId !== null,
+        onPanResponderGrant: () => {
+          initialIdxRef.current = activeCityId ? CITY_IDS.indexOf(activeCityId) : 0;
+          longPressTimerRef.current = setTimeout(() => {
+            setPreviewIdx(initialIdxRef.current);
+            setEditing(true);
+          }, LONG_PRESS_MS);
+        },
+        onPanResponderMove: (_, g) => {
+          // Cancel the long-press if the user drags before it fires (it's a swipe, not a hold).
+          if (longPressTimerRef.current && Math.hypot(g.dx, g.dy) > TAP_SLOP_PX) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+          }
+          if (!editingRef.current) return;
+          const steps = Math.round(-g.dy / DRAG_STEP_PX); // up is positive
+          const n = CITY_IDS.length;
+          const idx = ((initialIdxRef.current + steps) % n + n) % n;
+          if (idx !== previewIdxRef.current) setPreviewIdx(idx);
+        },
+        onPanResponderRelease: () => {
+          if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+          }
+          if (editingRef.current) onChange(CITY_IDS[previewIdxRef.current]);
+          setEditing(false);
+        },
+        onPanResponderTerminate: () => {
+          if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+          }
+          setEditing(false);
+        },
+      }),
+    [activeCityId, onChange],
+  );
+
+  const displayedId = editing ? CITY_IDS[previewIdx] : activeCityId;
+  const label = displayedId ? CITIES[displayedId].name.toUpperCase() : ' ';
+
+  return (
+    <View style={styles.cityIndicatorWrap} {...pan.panHandlers} testID="city-indicator">
+      <Animated.Text
+        style={[
+          styles.cityIndicatorText,
+          editing && styles.cityIndicatorTextEditing,
+          { transform: [{ scale }] },
+        ]}
+      >
+        {label}
+      </Animated.Text>
+      {editing && <Text style={styles.cityIndicatorHint}>↑ ↓ release to confirm</Text>}
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [cocktail, setCocktail] = useState<CocktailType | null>(null);
   const [patienceIdx, setPatienceIdx] = useState<number | null>(null);
+  const [activeCityId, setActiveCity] = useState<CityId | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      // Silently check for last-known location only if permission was already granted —
+      // never trigger a permission prompt from the home screen.
+      let gpsLoc: { lat: number; lng: number } | null = null;
+      try {
+        const perm = await Location.getForegroundPermissionsAsync();
+        if (perm.granted) {
+          const last = await Location.getLastKnownPositionAsync();
+          if (last) gpsLoc = { lat: last.coords.latitude, lng: last.coords.longitude };
+        }
+      } catch {}
+      const { city } = await loadActiveCity({ gpsLoc });
+      setActiveCity(city.id);
+    })();
+  }, []);
+
+  const persistCity = async (id: CityId) => {
+    setActiveCity(id);
+    await setActiveCityId(id);
+  };
 
   const handleFind = () => {
-    if (!cocktail || patienceIdx === null) return;
+    if (!cocktail || patienceIdx === null || !activeCityId) return;
     router.push({
       pathname: '/results',
-      params: { cocktail, radiusKm: PATIENCE_OPTIONS[patienceIdx].radiusKm },
+      params: { cocktail, radiusKm: PATIENCE_OPTIONS[patienceIdx].radiusKm, cityId: activeCityId },
     });
   };
 
@@ -159,7 +276,6 @@ export default function HomeScreen() {
       {/* Cream header blob */}
       <View style={styles.headerBlob}>
         <View style={[styles.headerInner, { paddingTop: insets.top + 12 }]}>
-          <Text style={styles.eyebrow}>Manchester · Est. 2025</Text>
           <View style={styles.titleRow}>
             <Text style={styles.ofText}>OF</Text>
             <View>
@@ -172,7 +288,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Body */}
-      <View style={styles.body}>
+      <View style={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
 
         <Text style={styles.sectionLabel}>What are you having</Text>
         <View style={styles.cocktailRow}>
@@ -228,22 +344,16 @@ export default function HomeScreen() {
           <View style={styles.ctaContainer}>
             <View style={styles.ctaShadow} />
             <TouchableOpacity
-              style={[styles.cta, (!cocktail || patienceIdx === null) && styles.ctaDisabled]}
+              style={[styles.cta, (!cocktail || patienceIdx === null || !activeCityId) && styles.ctaDisabled]}
               onPress={handleFind}
-              disabled={!cocktail || patienceIdx === null}
+              disabled={!cocktail || patienceIdx === null || !activeCityId}
               activeOpacity={0.9}
             >
               <Text style={styles.ctaText}>FIND MY DRINK</Text>
               <Text style={styles.ctaSub}>tap to search nearby</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.addVenueLink}
-            onPress={() => router.push('/add-venue')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.addVenueLinkText}>+ Add a bar</Text>
-          </TouchableOpacity>
+          <CityIndicator activeCityId={activeCityId} onChange={persistCity} />
         </View>
       </View>
     </View>
@@ -287,15 +397,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 28,
   },
-  eyebrow: {
-    fontFamily: undefined,
+  cityIndicatorWrap: {
+    alignSelf: 'center',
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+  },
+  cityIndicatorText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 3,
+    color: Colors.mustard,
+    opacity: 0.75,
+  },
+  cityIndicatorTextEditing: {
+    color: Colors.mustard,
+    opacity: 1,
+  },
+  cityIndicatorHint: {
     fontSize: 9,
     fontWeight: '700',
-    letterSpacing: 4,
-    textTransform: 'uppercase',
-    color: Colors.ink,
-    opacity: 0.4,
-    marginBottom: 4,
+    letterSpacing: 2,
+    color: Colors.cream,
+    opacity: 0.5,
+    marginTop: 6,
   },
   titleRow: {
     flexDirection: 'row',
@@ -500,7 +626,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 3.5,
     borderColor: Colors.ink,
-    paddingVertical: 20,
+    paddingVertical: 16,
     paddingHorizontal: 18,
     alignItems: 'center',
     position: 'relative',
@@ -524,19 +650,5 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     opacity: 0.5,
     marginTop: 5,
-  },
-  addVenueLink: {
-    alignSelf: 'center',
-    marginTop: 14,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-  },
-  addVenueLinkText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    color: Colors.mustard,
-    opacity: 0.75,
   },
 });

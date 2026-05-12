@@ -1,3 +1,5 @@
+import { getDistanceKm } from './geo';
+
 export interface PlaceSuggestion {
   google_place_id: string;
   name: string;
@@ -39,7 +41,6 @@ export async function searchPlaces(
 
   const body: any = {
     textQuery: trimmed,
-    includedType: 'bar',
     maxResultCount: 10,
   };
   if (biasLat != null && biasLng != null) {
@@ -67,7 +68,7 @@ export async function searchPlaces(
   }
 
   const json = (await res.json()) as { places?: PlacesResult[] };
-  return (json.places ?? []).map(p => ({
+  const suggestions = (json.places ?? []).map(p => ({
     google_place_id: p.id,
     name: p.displayName.text,
     address: p.formattedAddress,
@@ -76,4 +77,17 @@ export async function searchPlaces(
     rating: p.rating ?? null,
     rating_count: p.userRatingCount ?? null,
   }));
+
+  // Google's text-search ranks by relevance + popularity, which buries nearby venues
+  // when a query like "Hopscotch" has popular global matches. Re-sort by distance to
+  // the bias point so the bar you're standing in front of comes first.
+  if (biasLat != null && biasLng != null) {
+    const withDist = suggestions.map(s => ({
+      s,
+      d: getDistanceKm(biasLat, biasLng, s.lat, s.lng),
+    }));
+    withDist.sort((a, b) => a.d - b.d);
+    return withDist.map(x => x.s);
+  }
+  return suggestions;
 }

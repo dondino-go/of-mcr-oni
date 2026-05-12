@@ -3,6 +3,17 @@
     "version": ">= 16.0.0"
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_g-h9abRZbDs2EPqHoIp-5Q_fF8c-Ydu",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyBCUsRtcyTdA12SFLqUCFaHeYarZ3J1dGE"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "preview": {
       "env": {
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_g-h9abRZbDs2EPqHoIp-5Q_fF8c-Ydu",
